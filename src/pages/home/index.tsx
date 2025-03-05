@@ -1,34 +1,23 @@
-import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import Table from "react-bootstrap/Table";
 import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 import Image from "react-bootstrap/Image";
-
-type ContributorsProps = {
-  avatar: string;
-  userName: string;
-  contributions: number;
-  fullName: string;
-  company: string;
-  location: string;
-};
-
-interface RepoData {
-  owner: string;
-  repo: string;
-  name: string;
-  description: string;
-  language: string;
-  license: string;
-  stars: number;
-  followers: number;
-  contributors: ContributorsProps[];
-}
+import Card from "react-bootstrap/Card";
+import { useState } from "react";
+import {
+  addRepository,
+  IRepoData,
+  IContributorsProps,
+} from "../../redux/repoSlice";
+import { AppDispatch, RootState } from "../../redux/store";
+import PieChartModel from "../../utils/charts/PieChartModel";
+import RadialChartModel from "../../utils/charts/RadialChartModel";
 
 export default function Home() {
-  const [repoData, setRepoData] = useState<RepoData>({
+  const [repoData, setRepoData] = useState<IRepoData>({
     owner: "",
     repo: "",
     name: "",
@@ -38,13 +27,28 @@ export default function Home() {
     stars: 0,
     followers: 0,
     contributors: [],
+    topCompanies: [],
+    topLocations: [],
+    lastUpdated: 0,
   });
-
-  const [topCompanies, setTopCompanies] = useState<[string, number][]>([]);
-  const [topLocations, setTopLocations] = useState<[string, number][]>([]);
+  const dispatch = useDispatch<AppDispatch>();
+  const repositories = useSelector(
+    (state: RootState) => state.repositories.repositories
+  );
+  console.log(repoData);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    const searchRepo = `${repoData.owner}/${repoData.repo}`;
+    const repoExists = repositories[searchRepo];
+    const oneHour = 60 * 60 * 1000;
+
+    if (repoExists && Date.now() - repoExists.lastUpdated < oneHour) {
+      setRepoData(repoExists);
+      return;
+    }
+
     const companyContributions: Record<string, number> = {};
     const locationContributions: Record<string, number> = {};
 
@@ -79,9 +83,7 @@ export default function Home() {
       }
       const contributorsRespData = await contributorsResp.json();
 
-      const compiledData: ContributorsProps[] = [];
-
-      console.log(contributorsRespData);
+      const compiledData: IContributorsProps[] = [];
 
       await Promise.all(
         contributorsRespData.map(async (contributor: any) => {
@@ -118,17 +120,13 @@ export default function Home() {
         })
       );
 
-      console.log(companyContributions);
       const compileCompanies = Object.entries(companyContributions)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 14);
-      console.log(compileCompanies);
-      
-      console.log(locationContributions);
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 14);
+
       const compileLocations = Object.entries(locationContributions)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 14);
-      console.log(compileLocations);
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 14);
 
       setRepoData({
         ...repoData,
@@ -140,66 +138,113 @@ export default function Home() {
         followers: repoRespData.subscribers_count,
         contributors: compiledData,
       });
-      setTopCompanies(compileCompanies);
-      setTopLocations(compileLocations);
+
+      dispatch(
+        addRepository({
+          owner: repoData.owner,
+          repo: repoData.repo,
+          name: repoRespData.name,
+          description: repoRespData.description,
+          language: repoRespData.language,
+          license: repoRespData.license.name,
+          stars: repoRespData.stargazers_count,
+          followers: repoRespData.subscribers_count,
+          contributors: compiledData,
+          topCompanies: compileCompanies,
+          topLocations: compileLocations,
+          lastUpdated: Date.now(),
+        })
+      );
     } catch (error) {
       console.error(error);
     }
   };
 
-  useEffect(() => {
-    const search = async () => {};
-    search();
-  }, []);
-  
   return (
     <div>
-      <h1>Open-Source Contribution Analyser</h1>
+      <h4 className="text-center mb-4">Open-Source Contribution Analyser</h4>
       <Form onSubmit={handleSubmit} className="mb-4">
-        <Form.Group as={Row} className="mb-3" controlId="formRepoOwner">
-          <Form.Label column sm="2">
-            Owner
-          </Form.Label>
-          <Col sm="10">
-            <Form.Control
-              type="text"
-              placeholder="Enter an owner name"
-              value={repoData.owner}
-              onChange={(e) => {
-                setRepoData({ ...repoData, owner: e.target.value });
-              }}
-            />
+        <Row className="g-3 align-items-end">
+          <Col xs="auto">
+            <Form.Group controlId="formRepoOwner">
+              <Form.Label>Owner</Form.Label>
+              <Form.Control
+                style={{ width: "400px" }}
+                type="text"
+                placeholder="Enter a repository owner"
+                value={repoData.owner}
+                onChange={(e) => {
+                  setRepoData({ ...repoData, owner: e.target.value });
+                }}
+              />
+            </Form.Group>
           </Col>
-        </Form.Group>
-        <Form.Group as={Row} className="mb-3" controlId="formRepoName">
-          <Form.Label column sm="2">
-            Repository
-          </Form.Label>
-          <Col sm="10">
-            <Form.Control
-              type="text"
-              placeholder="Enter the repo name"
-              value={repoData.repo}
-              onChange={(e) => {
-                setRepoData({ ...repoData, repo: e.target.value });
-              }}
-            />
+          <Col xs="auto">
+            <Form.Group controlId="formRepoName">
+              <Form.Label>Repository</Form.Label>
+              <Form.Control
+                style={{ width: "400px" }}
+                type="text"
+                placeholder="Enter the repo name"
+                value={repoData.repo}
+                onChange={(e) => {
+                  setRepoData({ ...repoData, repo: e.target.value });
+                }}
+              />
+            </Form.Group>
           </Col>
-        </Form.Group>
-        <Button variant="primary" type="submit">
-          Search
-        </Button>
+          <Col xs="auto">
+            <Button variant="primary" type="submit">
+              Search
+            </Button>
+          </Col>
+        </Row>
       </Form>
       {repoData.name != "" && (
         <>
-          <div>
-            <p>Name: {repoData.name}</p>
-            <p>Description: {repoData.description}</p>
-            <p>Language: {repoData.language}</p>
-            <p>License: {repoData.license}</p>
-            <p>Stars: {repoData.stars}</p>
-            <p>Followers: {repoData.followers}</p>
-          </div>
+          <Card className="p-2">
+          <Card.Title>Repository details</Card.Title>
+            <Row className="mt-2">
+              <Col sm={5}>
+                <Form.Group controlId="nameRepoForm">
+                  <Form.Label className="mb-0">Name</Form.Label>
+                  <Form.Control value={repoData.name} />
+                </Form.Group>
+              </Col>
+              <Col sm={7}>
+                <Form.Group controlId="descRepoForm">
+                  <Form.Label className="mb-0">Description</Form.Label>
+                  <Form.Control value={repoData.description} />
+                </Form.Group>
+              </Col>
+            </Row>
+            <Row className="mt-2">
+              <Col>
+                <Form.Group controlId="languageRepoForm">
+                  <Form.Label className="mb-0">Language</Form.Label>
+                  <Form.Control value={repoData.language} />
+                </Form.Group>
+              </Col>
+              <Col>
+                <Form.Group controlId="licenseRepoForm">
+                  <Form.Label className="mb-0">License</Form.Label>
+                  <Form.Control value={repoData.license} />
+                </Form.Group>
+              </Col>
+              <Col>
+                <Form.Group controlId="starsRepoForm">
+                  <Form.Label className="mb-0">Stars</Form.Label>
+                  <Form.Control value={repoData.stars} />
+                </Form.Group>
+              </Col>
+              <Col>
+                <Form.Group controlId="followersRepoForm">
+                  <Form.Label className="mb-0">Followers</Form.Label>
+                  <Form.Control value={repoData.followers} />
+                </Form.Group>
+              </Col>
+            </Row>
+          </Card>
           <Row>
             <Col>
               <Row>
@@ -212,7 +257,7 @@ export default function Home() {
                     </tr>
                   </thead>
                   <tbody>
-                    {topCompanies.map((item, index) => {
+                    {repoData.topCompanies.map((item, index) => {
                       return (
                         <tr key={index + item[0]}>
                           <td>{item[0]}</td>
@@ -222,6 +267,8 @@ export default function Home() {
                     })}
                   </tbody>
                 </Table>
+                <RadialChartModel dataChart={repoData.topCompanies} />
+                {/* <PieChartModel wh={200} ht={200} dataChart={repoData.topCompanies} /> */}
               </Row>
               <Row>
                 <h3>Top Contributors by Locations</h3>
@@ -233,7 +280,7 @@ export default function Home() {
                     </tr>
                   </thead>
                   <tbody>
-                    {topLocations.map((item, index) => {
+                    {repoData.topLocations.map((item, index) => {
                       return (
                         <tr key={index + item[0]}>
                           <td>{item[0]}</td>
