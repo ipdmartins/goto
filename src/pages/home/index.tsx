@@ -1,11 +1,9 @@
 import { useDispatch, useSelector } from "react-redux";
-import Table from "react-bootstrap/Table";
 import Button from "react-bootstrap/Button";
+import Card from "react-bootstrap/Card";
 import Form from "react-bootstrap/Form";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
-import Image from "react-bootstrap/Image";
-import Card from "react-bootstrap/Card";
 import { useState } from "react";
 import {
   addRepository,
@@ -13,8 +11,8 @@ import {
   IContributorsProps,
 } from "../../redux/repoSlice";
 import { AppDispatch, RootState } from "../../redux/store";
-import PieChartModel from "../../utils/charts/PieChartModel";
-import RadialChartModel from "../../utils/charts/RadialChartModel";
+import Contributions from "./tables/Contributions";
+import Contributors from "./tables/Contributors";
 
 export default function Home() {
   const [repoData, setRepoData] = useState<IRepoData>({
@@ -35,7 +33,6 @@ export default function Home() {
   const repositories = useSelector(
     (state: RootState) => state.repositories.repositories
   );
-  console.log(repoData);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -203,7 +200,7 @@ export default function Home() {
       {repoData.name != "" && (
         <>
           <Card className="p-2">
-          <Card.Title>Repository details</Card.Title>
+            <Card.Title>Repository details</Card.Title>
             <Row className="mt-2">
               <Col sm={5}>
                 <Form.Group controlId="nameRepoForm">
@@ -245,91 +242,21 @@ export default function Home() {
               </Col>
             </Row>
           </Card>
-          <Row>
-            <Col>
-              <Row>
-                <h3>Top Companies Contributions</h3>
-                <Table striped bordered hover>
-                  <thead>
-                    <tr>
-                      <th>Company</th>
-                      <th>Contributions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {repoData.topCompanies.map((item, index) => {
-                      return (
-                        <tr key={index + item[0]}>
-                          <td>{item[0]}</td>
-                          <td>{item[1]}</td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </Table>
-                <RadialChartModel dataChart={repoData.topCompanies} />
-                {/* <PieChartModel wh={200} ht={200} dataChart={repoData.topCompanies} /> */}
-              </Row>
-              <Row>
-                <h3>Top Contributors by Locations</h3>
-                <Table striped bordered hover>
-                  <thead>
-                    <tr>
-                      <th>Location</th>
-                      <th>Contributions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {repoData.topLocations.map((item, index) => {
-                      return (
-                        <tr key={index + item[0]}>
-                          <td>{item[0]}</td>
-                          <td>{item[1]}</td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </Table>
-              </Row>
-            </Col>
-            <Col>
-              <h3>Top 30 Contributors</h3>
-              <Table striped bordered hover>
-                <thead>
-                  <tr>
-                    <th>#</th>
-                    <th>Avatar</th>
-                    <th>Username</th>
-                    <th>Contributions</th>
-                    <th>Full Name</th>
-                    <th>Company</th>
-                    <th>Location</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {repoData.contributors.map((item, index) => {
-                    return (
-                      <tr key={index + item.avatar}>
-                        <td>{index + 1}</td>
-                        <td>
-                          <Image
-                            src={item.avatar}
-                            rounded
-                            style={{ maxWidth: "30px", height: "auto" }}
-                          />
-                        </td>
-                        <td>{item.userName}</td>
-                        <td>{item.contributions}</td>
-                        <td>{item.fullName || "N/A"}</td>
-                        <td>{item.company || "N/A"}</td>
-                        <td>{item.location || "N/A"}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </Table>
-            </Col>
-          </Row>
+            <Contributors dataList={repoData.contributors} />
+            <Row className="mt-4 p-3">
+              <Col className="me-2">
+                <Contributions
+                  title="Companies"
+                  dataList={repoData.topCompanies}
+                />
+              </Col>
+              <Col className="ms-2">
+                <Contributions
+                  title="Locations"
+                  dataList={repoData.topLocations}
+                />
+              </Col>
+            </Row>
         </>
       )}
     </div>
