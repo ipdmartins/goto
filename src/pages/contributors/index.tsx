@@ -7,6 +7,8 @@ export default function Contributors() {
   const [savedContributors, setSavedContributors] = useState<
     SavedContributor[]
   >([]);
+  const [imgFailLoad, setImgFailLoad] = useState(false);
+
   const navigate = useNavigate();
 
   function getBookmarks(): SavedContributor[] {
@@ -44,11 +46,17 @@ export default function Contributors() {
               <tr key={index + item.avatar}>
                 <td>{index + 1}</td>
                 <td>
-                  <Image
-                    src={item.avatar}
-                    rounded
-                    style={{ maxWidth: "30px", height: "auto" }}
-                  />
+                  {!imgFailLoad ? (
+                    <Image
+                      src={item.avatar}
+                      rounded
+                      style={{ maxWidth: "30px", height: "auto" }}
+                      loading="lazy"
+                      onError={() => setImgFailLoad(true)}
+                    />
+                  ) : (
+                    <span>Image failed to load</span>
+                  )}
                 </td>
                 <td>{item.fullName}</td>
                 <td>{item.contributions}</td>

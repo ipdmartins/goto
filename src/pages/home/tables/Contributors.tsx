@@ -46,6 +46,8 @@ export default function Contributors({ dataList }: tableProps) {
     },
   ]);
   const [listSaved, setListSaved] = useState<string[]>([]);
+  const [imgFailLoad, setImgFailLoad] = useState(false);
+  
   const navigate = useNavigate();
 
   const handleClose = () => {
@@ -124,11 +126,17 @@ export default function Contributors({ dataList }: tableProps) {
               <tr key={index + item.avatar}>
                 <td>{index + 1}</td>
                 <td>
-                  <Image
-                    src={item.avatar}
-                    rounded
-                    style={{ maxWidth: "30px", height: "auto" }}
-                  />
+                  {!imgFailLoad ? (
+                    <Image
+                      src={item.avatar}
+                      rounded
+                      style={{ maxWidth: "30px", height: "auto" }}
+                      loading="lazy"
+                      onError={() => setImgFailLoad(true)}
+                    />
+                  ) : (
+                    <span>Image failed to load</span>
+                  )}
                 </td>
                 <td>{item.userName}</td>
                 <td>{item.contributions}</td>

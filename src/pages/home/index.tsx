@@ -13,6 +13,7 @@ import {
 import { AppDispatch, RootState } from "../../redux/store";
 import Contributions from "./tables/Contributions";
 import Contributors from "./tables/Contributors";
+import { Spinner } from "react-bootstrap";
 
 export default function Home() {
   const [repoData, setRepoData] = useState<IRepoData>({
@@ -29,6 +30,9 @@ export default function Home() {
     topLocations: [],
     lastUpdated: 0,
   });
+  const [resultsPerSearch, setResultsPerSearch] = useState(30);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const dispatch = useDispatch<AppDispatch>();
   const repositories = useSelector(
     (state: RootState) => state.repositories.repositories
@@ -36,6 +40,8 @@ export default function Home() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setLoading(true);
+    setError(null);
 
     const searchRepo = `${repoData.owner}/${repoData.repo}`;
     localStorage.setItem("currentRepo", JSON.stringify(searchRepo));
@@ -44,16 +50,21 @@ export default function Home() {
     const oneHour = 60 * 60 * 1000;
     if (repoExists && Date.now() - repoExists.lastUpdated < oneHour) {
       setRepoData(repoExists);
+    setLoading(false);
       return;
     }
 
     const companyContributions: Record<string, number> = {};
     const locationContributions: Record<string, number> = {};
+    const controller = new AbortController();
+    //Abort after 30 secs
+    const timeoutId = setTimeout(() => controller.abort(), 30000)
 
     try {
       const repoResp = await fetch(
         `https://api.github.com/repos/${repoData.owner}/${repoData.repo}`,
         {
+          signal: controller.signal,
           method: "GET",
           headers: {
             Accept: "application/vnd.github.v3+json",
@@ -67,8 +78,9 @@ export default function Home() {
       const repoRespData = await repoResp.json();
 
       const contributorsResp = await fetch(
-        `https://api.github.com/repos/${repoData.owner}/${repoData.repo}/contributors?per_page=30`,
+        `https://api.github.com/repos/${repoData.owner}/${repoData.repo}/contributors?per_page=${resultsPerSearch}`,
         {
+          signal: controller.signal,
           method: "GET",
           headers: {
             Accept: "application/vnd.github.v3+json",
@@ -86,6 +98,7 @@ export default function Home() {
       await Promise.all(
         contributorsRespData.map(async (contributor: any) => {
           const contributorResp = await fetch(contributor.url, {
+          signal: controller.signal,
             method: "GET",
             headers: {
               Accept: "application/vnd.github.v3+json",
@@ -155,22 +168,43 @@ export default function Home() {
           lastUpdated: Date.now(),
         })
       );
-    } catch (error) {
-      console.error(error);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        if (error.name === "AbortError") {
+          setError("Request timed out due to slow network");
+        } else {
+          setError(error.message || "An error occurred");
+        }
+      }
+    } finally {
+      clearTimeout(timeoutId);
+      setLoading(false);
     }
   };
 
   useEffect(() => {
     const stored = localStorage.getItem("currentRepo");
-    
+
     if (stored) {
       const format = JSON.parse(stored);
       const repoExists = repositories[format];
-      if(repoExists){
+      if (repoExists) {
         setRepoData(repoExists);
       }
     }
-  }, [])
+  }, []);
+
+  const handleChangeLimitSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = Number(e.target.value);
+    if (value < 30) {
+      setResultsPerSearch(30);
+    } else if (value > 200) {
+      setResultsPerSearch(200);
+    } else {
+      setResultsPerSearch(value);
+    }
+    
+  };
 
   return (
     <div>
@@ -181,7 +215,7 @@ export default function Home() {
             <Form.Group controlId="formRepoOwner">
               <Form.Label>Owner</Form.Label>
               <Form.Control
-                style={{ width: "400px" }}
+                style={{ width: "300px" }}
                 type="text"
                 placeholder="Enter a repository owner"
                 value={repoData.owner}
@@ -206,9 +240,23 @@ export default function Home() {
             </Form.Group>
           </Col>
           <Col xs="auto">
+            <Form.Group controlId="formLimitPerPage">
+              <Form.Label>Results per page</Form.Label>
+              <Form.Control
+                style={{ width: "150px" }}
+                placeholder="Enter a number between 30 and 200"
+                value={resultsPerSearch}
+                type="number"
+                onChange={handleChangeLimitSearch}
+              />
+            </Form.Group>
+          </Col>
+          <Col xs="auto">
             <Button variant="primary" type="submit">
               Search
             </Button>
+            {loading && <Spinner animation="border" role="status" />}
+            {error && <p className="text-danger">{error}</p>}
           </Col>
         </Row>
       </Form>
@@ -220,13 +268,16 @@ export default function Home() {
               <Col sm={5}>
                 <Form.Group controlId="nameRepoForm">
                   <Form.Label className="mb-0">Name</Form.Label>
-                  <Form.Control onChange={()=>{}} value={repoData.name} />
+                  <Form.Control onChange={() => {}} value={repoData.name} />
                 </Form.Group>
               </Col>
               <Col sm={7}>
                 <Form.Group controlId="descRepoForm">
                   <Form.Label className="mb-0">Description</Form.Label>
-                  <Form.Control onChange={()=>{}} value={repoData.description} />
+                  <Form.Control
+                    onChange={() => {}}
+                    value={repoData.description}
+                  />
                 </Form.Group>
               </Col>
             </Row>
@@ -234,25 +285,28 @@ export default function Home() {
               <Col>
                 <Form.Group controlId="languageRepoForm">
                   <Form.Label className="mb-0">Language</Form.Label>
-                  <Form.Control onChange={()=>{}} value={repoData.language} />
+                  <Form.Control onChange={() => {}} value={repoData.language} />
                 </Form.Group>
               </Col>
               <Col>
                 <Form.Group controlId="licenseRepoForm">
                   <Form.Label className="mb-0">License</Form.Label>
-                  <Form.Control onChange={()=>{}} value={repoData.license} />
+                  <Form.Control onChange={() => {}} value={repoData.license} />
                 </Form.Group>
               </Col>
               <Col>
                 <Form.Group controlId="starsRepoForm">
                   <Form.Label className="mb-0">Stars</Form.Label>
-                  <Form.Control onChange={()=>{}} value={repoData.stars} />
+                  <Form.Control onChange={() => {}} value={repoData.stars} />
                 </Form.Group>
               </Col>
               <Col>
                 <Form.Group controlId="followersRepoForm">
                   <Form.Label className="mb-0">Followers</Form.Label>
-                  <Form.Control onChange={()=>{}} value={repoData.followers} />
+                  <Form.Control
+                    onChange={() => {}}
+                    value={repoData.followers}
+                  />
                 </Form.Group>
               </Col>
             </Row>
