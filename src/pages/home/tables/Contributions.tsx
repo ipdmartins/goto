@@ -1,7 +1,7 @@
 import { Badge, Modal, Row, Stack, Table } from "react-bootstrap";
 import { useState } from "react";
-import "./style.css";
 import RadialChartModel from "../charts/RadialChartModel";
+import "./style.css";
 
 type tableProps = {
   title: string;

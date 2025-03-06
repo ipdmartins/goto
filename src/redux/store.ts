@@ -10,20 +10,20 @@ import {
   REGISTER,
 } from "redux-persist";
 import storage from "redux-persist/lib/storage";
-import repositoryReducer from './repoSlice'
+import repositoryReducer from "./repoSlice";
 
 const persistConfig = {
   key: "root",
   version: 1,
   storage,
-  whiteList: ["repositories"],
+  whitelist: ["repositories"],
 };
 
 const persistedReducer = persistReducer(persistConfig, repositoryReducer);
 
 export const store = configureStore({
   reducer: {
-    repositories: persistedReducer
+    repositories: persistedReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

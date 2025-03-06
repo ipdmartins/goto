@@ -1,35 +1,108 @@
-import { Badge, Button, Image, Modal, Stack, Table } from "react-bootstrap";
-import { useState } from "react";
+import {
+  Badge,
+  Button,
+  Image,
+  Modal,
+  OverlayTrigger,
+  Stack,
+  Table,
+  Toast,
+  Tooltip,
+} from "react-bootstrap";
+import { BookmarkStarFill } from "react-bootstrap-icons";
+import { useEffect, useState } from "react";
 import PieChartModel from "../charts/PieChartModel";
+import { useNavigate } from "react-router-dom";
+
+export interface IBookmarkItem {
+  avatar: string;
+  company: string;
+  contributions: number;
+  fullName: string;
+  location: string;
+  userName: string;
+}
 
 export interface tableProps {
-  dataList: 
-    {
-      avatar: string;
-      company: string;
-      contributions: number;
-      fullName: string;
-      location: string;
-      userName: string;
-    }[];
+  dataList: IBookmarkItem[];
+}
+
+export interface SavedContributor {
+  avatar: string;
+  fullName: string;
+  contributions: number;
 };
+
 export default function Contributors({ dataList }: tableProps) {
-    const [openModal, setOpenModal] = useState(false);
-  
-    const handleClose = () => {
-      setOpenModal(!openModal);
-    };
-  
+  const [openModal, setOpenModal] = useState(false);
+  const [showToast, setShowToast] = useState(false);
+  const [savedContributors, setSavedContributors] = useState<
+    SavedContributor[]
+  >([
+    {
+      avatar: "",
+      fullName: "",
+      contributions: 0,
+    },
+  ]);
+  const [listSaved, setListSaved] = useState<string[]>([]);
+  const navigate = useNavigate();
+
+  const handleClose = () => {
+    setOpenModal(!openModal);
+  };
+
+  function getBookmarks() {
+    const stored = localStorage.getItem("bookmarks");
+    return stored ? JSON.parse(stored) : [];
+  }
+
+  function handleBookmark(data: IBookmarkItem) {
+    const exists = savedContributors.find(
+      (item) => item.avatar === data.avatar
+    );
+
+    if (!exists) {
+      const newData = savedContributors;
+      newData.push({
+        avatar: data.avatar,
+        fullName: data.fullName,
+        contributions: data.contributions,
+      });
+      setSavedContributors(newData);
+      setListSaved((prev) => [...prev, data.avatar]);
+      localStorage.setItem("bookmarks", JSON.stringify(newData));
+    }
+  }
+
+  useEffect(() => {
+    const bookmarks = getBookmarks();
+    const list: string[] = [];
+    bookmarks.forEach((item: IBookmarkItem) => {
+      list.push(item.avatar);
+    });
+    setListSaved(list);
+    setSavedContributors(bookmarks);
+  }, []);
+
   return (
     <div className="mt-4">
-      <Stack direction="horizontal" gap={3}>
-      <h5>Top 30 Contributors</h5>
+      <Stack direction="horizontal" gap={3} className="d-flex align-items-center">
+        <h5>Top 30 Contributors</h5>
         <Badge
           className="mb-2 badge-hover"
           bg="info"
           onClick={() => setOpenModal(true)}
         >
           View Chart
+        </Badge>
+        <div className="flex-grow-1" />
+        <Badge
+          className="mb-2 badge-hover"
+          bg="info"
+          onClick={() => navigate("/contributors")}
+        >
+          Verify my bookmarks
         </Badge>
       </Stack>
       <Table striped bordered hover>
@@ -62,7 +135,36 @@ export default function Contributors({ dataList }: tableProps) {
                 <td>{item.fullName || "N/A"}</td>
                 <td>{item.company || "N/A"}</td>
                 <td>{item.location || "N/A"}</td>
-                <td><Button>teste</Button></td>
+                <td className="text-center">
+                  <OverlayTrigger
+                    placement="left"
+                    overlay={
+                      <Tooltip id={index + item.fullName}>
+                        <span>
+                        Click to bookmark
+                        </span>
+                      </Tooltip>
+                    }
+                  >
+                    <Button
+                      className="m-0 p-1"
+                      variant="outline-secondary"
+                      disabled={listSaved.includes(item.avatar)}
+                      onClick={() => {
+                        handleBookmark(item);
+                      }}
+                    >
+                      <BookmarkStarFill
+                        size={15}
+                        color={
+                          listSaved.includes(item.avatar)
+                            ? "#0a6f2b"
+                            : "#159fdb"
+                        }
+                      />
+                    </Button>
+                  </OverlayTrigger>
+                </td>
               </tr>
             );
           })}

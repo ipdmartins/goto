@@ -4,7 +4,7 @@ import Card from "react-bootstrap/Card";
 import Form from "react-bootstrap/Form";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   addRepository,
   IRepoData,
@@ -38,9 +38,10 @@ export default function Home() {
     e.preventDefault();
 
     const searchRepo = `${repoData.owner}/${repoData.repo}`;
+    localStorage.setItem("currentRepo", JSON.stringify(searchRepo));
+
     const repoExists = repositories[searchRepo];
     const oneHour = 60 * 60 * 1000;
-
     if (repoExists && Date.now() - repoExists.lastUpdated < oneHour) {
       setRepoData(repoExists);
       return;
@@ -134,6 +135,8 @@ export default function Home() {
         stars: repoRespData.stargazers_count,
         followers: repoRespData.subscribers_count,
         contributors: compiledData,
+        topCompanies: compileCompanies,
+        topLocations: compileLocations,
       });
 
       dispatch(
@@ -156,6 +159,18 @@ export default function Home() {
       console.error(error);
     }
   };
+
+  useEffect(() => {
+    const stored = localStorage.getItem("currentRepo");
+    
+    if (stored) {
+      const format = JSON.parse(stored);
+      const repoExists = repositories[format];
+      if(repoExists){
+        setRepoData(repoExists);
+      }
+    }
+  }, [])
 
   return (
     <div>
@@ -205,13 +220,13 @@ export default function Home() {
               <Col sm={5}>
                 <Form.Group controlId="nameRepoForm">
                   <Form.Label className="mb-0">Name</Form.Label>
-                  <Form.Control value={repoData.name} />
+                  <Form.Control onChange={()=>{}} value={repoData.name} />
                 </Form.Group>
               </Col>
               <Col sm={7}>
                 <Form.Group controlId="descRepoForm">
                   <Form.Label className="mb-0">Description</Form.Label>
-                  <Form.Control value={repoData.description} />
+                  <Form.Control onChange={()=>{}} value={repoData.description} />
                 </Form.Group>
               </Col>
             </Row>
@@ -219,44 +234,44 @@ export default function Home() {
               <Col>
                 <Form.Group controlId="languageRepoForm">
                   <Form.Label className="mb-0">Language</Form.Label>
-                  <Form.Control value={repoData.language} />
+                  <Form.Control onChange={()=>{}} value={repoData.language} />
                 </Form.Group>
               </Col>
               <Col>
                 <Form.Group controlId="licenseRepoForm">
                   <Form.Label className="mb-0">License</Form.Label>
-                  <Form.Control value={repoData.license} />
+                  <Form.Control onChange={()=>{}} value={repoData.license} />
                 </Form.Group>
               </Col>
               <Col>
                 <Form.Group controlId="starsRepoForm">
                   <Form.Label className="mb-0">Stars</Form.Label>
-                  <Form.Control value={repoData.stars} />
+                  <Form.Control onChange={()=>{}} value={repoData.stars} />
                 </Form.Group>
               </Col>
               <Col>
                 <Form.Group controlId="followersRepoForm">
                   <Form.Label className="mb-0">Followers</Form.Label>
-                  <Form.Control value={repoData.followers} />
+                  <Form.Control onChange={()=>{}} value={repoData.followers} />
                 </Form.Group>
               </Col>
             </Row>
           </Card>
-            <Contributors dataList={repoData.contributors} />
-            <Row className="mt-4 p-3">
-              <Col className="me-2">
-                <Contributions
-                  title="Companies"
-                  dataList={repoData.topCompanies}
-                />
-              </Col>
-              <Col className="ms-2">
-                <Contributions
-                  title="Locations"
-                  dataList={repoData.topLocations}
-                />
-              </Col>
-            </Row>
+          <Contributors dataList={repoData.contributors} />
+          <Row className="mt-4 p-3">
+            <Col className="me-2">
+              <Contributions
+                title="Companies"
+                dataList={repoData.topCompanies}
+              />
+            </Col>
+            <Col className="ms-2">
+              <Contributions
+                title="Locations"
+                dataList={repoData.topLocations}
+              />
+            </Col>
+          </Row>
         </>
       )}
     </div>
