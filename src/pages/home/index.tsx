@@ -45,12 +45,14 @@ export default function Home() {
 
     const searchRepo = `${repoData.owner}/${repoData.repo}`;
     localStorage.setItem("currentRepo", JSON.stringify(searchRepo));
+    const timestamp = Date.now();
+    localStorage.setItem("timestamp", String(timestamp));
 
     const repoExists = repositories[searchRepo];
     const oneHour = 60 * 60 * 1000;
     if (repoExists && Date.now() - repoExists.lastUpdated < oneHour) {
       setRepoData(repoExists);
-    setLoading(false);
+      setLoading(false);
       return;
     }
 
@@ -58,7 +60,7 @@ export default function Home() {
     const locationContributions: Record<string, number> = {};
     const controller = new AbortController();
     //Abort after 30 secs
-    const timeoutId = setTimeout(() => controller.abort(), 30000)
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
 
     try {
       const repoResp = await fetch(
@@ -98,7 +100,7 @@ export default function Home() {
       await Promise.all(
         contributorsRespData.map(async (contributor: any) => {
           const contributorResp = await fetch(contributor.url, {
-          signal: controller.signal,
+            signal: controller.signal,
             method: "GET",
             headers: {
               Accept: "application/vnd.github.v3+json",
@@ -183,13 +185,18 @@ export default function Home() {
   };
 
   useEffect(() => {
-    const stored = localStorage.getItem("currentRepo");
+    const timestamp = localStorage.getItem("timestamp");
+    if (timestamp && Date.now() - Number(timestamp) > 60 * 60 * 1000) {
+      localStorage.removeItem("timestamp");
+    } else {
+      const stored = localStorage.getItem("currentRepo");
 
-    if (stored) {
-      const format = JSON.parse(stored);
-      const repoExists = repositories[format];
-      if (repoExists) {
-        setRepoData(repoExists);
+      if (stored) {
+        const format = JSON.parse(stored);
+        const repoExists = repositories[format];
+        if (repoExists) {
+          setRepoData(repoExists);
+        }
       }
     }
   }, []);
@@ -203,7 +210,6 @@ export default function Home() {
     } else {
       setResultsPerSearch(value);
     }
-    
   };
 
   return (
