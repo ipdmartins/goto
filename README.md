@@ -17,12 +17,14 @@ This project is designed to interact with Github repositories. You just need to 
 	<ol>
 		<li>
 			**Clone this repository**</br>
-			In your preferred shell type: git clone https://github.com/ipdmartins/Hedera_test1.git
+			In your preferred shell type: git clone https://github.com/ipdmartins/goto.git
 		</li> 	
 		<li>
 			**Installing**</br>
             You need Node and npm or yarn installed in your computer.</br>
-			In the shell type: cd ssssxxx and npm install or yarn add to install dependencies
+			In the shell type: cd goto and npm install or yarn add to install dependencies</br>
+			In the root project, you need to create a .env file as demonstrated in .env.example</br>
+			In the .env file you need to define a Github token, generated within your Github account.
 		</li> 	
 		<li>
 			**Running**</br>
@@ -32,7 +34,7 @@ This project is designed to interact with Github repositories. You just need to 
 		<li>
 			**How to Contribute**</br>
 			Whether you're helping to fix bugs, improve the docs, or spread the word, I'd appreciate to have you as part of it.</br>
-            See [CONTRIBUTING.md](#contributing) to join!
+            See CONTRIBUTING.md to join!
 		</li>
 	</ol>
 </p>

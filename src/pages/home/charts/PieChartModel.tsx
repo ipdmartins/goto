@@ -3,29 +3,6 @@ import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import { tableProps } from "../tables/Contributors";
 
 export default function PieChartModel({ dataList }: tableProps) {
-  const COLORS = [
-    "#3A7F9C",
-    "#E84C3D",
-    "#2ECC71",
-    "#9B59B6",
-    "#F1C40F",
-    "#3498DB",
-    "#E67E22",
-    "#1ABC9C",
-    "#8E44AD",
-    "#F39C12",
-    "#16A085",
-    "#D35400",
-    "#2980B9",
-    "#27AE60",
-    "#C0392B",
-    "#8F7A5E",
-    "#BDC3C7",
-    "#7F8C8D",
-    "#E91E63",
-    "#34495E",
-  ];
-
   const chartData = dataList.map((item) => ({
     name: item.userName,
     value: item.contributions,
@@ -48,6 +25,11 @@ export default function PieChartModel({ dataList }: tableProps) {
     index: number;
   }
 
+  const generateColorCode = () => {
+    const randomColor = Math.floor(Math.random() * 16777215).toString(16);
+    return `#${randomColor.padStart(6, "0")}`;
+  };
+
   const renderCustomLabel = ({
     name,
     value,
@@ -69,7 +51,7 @@ export default function PieChartModel({ dataList }: tableProps) {
       <text
         x={x}
         y={y}
-        fill={COLORS[index % COLORS.length]}
+        fill={generateColorCode()}
         textAnchor={x > cx ? "start" : "end"}
         dominantBaseline="central"
         fontSize={12}
@@ -94,10 +76,7 @@ export default function PieChartModel({ dataList }: tableProps) {
             dataKey="value"
           >
             {chartData.map((entry, index) => (
-              <Cell
-                key={`cell-${index}`}
-                fill={COLORS[index % COLORS.length]}
-              />
+              <Cell key={`cell-${index}`} fill={generateColorCode()} />
             ))}
           </Pie>
         </PieChart>

@@ -1,10 +1,6 @@
 import { useDispatch, useSelector } from "react-redux";
-import Button from "react-bootstrap/Button";
-import Card from "react-bootstrap/Card";
-import Form from "react-bootstrap/Form";
-import Row from "react-bootstrap/Row";
-import Col from "react-bootstrap/Col";
 import { useEffect, useState } from "react";
+import { Spinner, Button, Card, Form, Row, Col } from "react-bootstrap";
 import {
   addRepository,
   IRepoData,
@@ -13,7 +9,6 @@ import {
 import { AppDispatch, RootState } from "../../redux/store";
 import Contributions from "./tables/Contributions";
 import Contributors from "./tables/Contributors";
-import { Spinner } from "react-bootstrap";
 
 export default function Home() {
   const [repoData, setRepoData] = useState<IRepoData>({
@@ -33,6 +28,7 @@ export default function Home() {
   const [resultsPerSearch, setResultsPerSearch] = useState(30);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
   const dispatch = useDispatch<AppDispatch>();
   const repositories = useSelector(
     (state: RootState) => state.repositories.repositories

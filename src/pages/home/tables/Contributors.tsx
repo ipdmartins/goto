@@ -6,13 +6,12 @@ import {
   OverlayTrigger,
   Stack,
   Table,
-  Toast,
   Tooltip,
 } from "react-bootstrap";
 import { BookmarkStarFill } from "react-bootstrap-icons";
+import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import PieChartModel from "../charts/PieChartModel";
-import { useNavigate } from "react-router-dom";
 
 export interface IBookmarkItem {
   avatar: string;
@@ -34,8 +33,6 @@ export interface SavedContributor {
 };
 
 export default function Contributors({ dataList }: tableProps) {
-  const [openModal, setOpenModal] = useState(false);
-  const [showToast, setShowToast] = useState(false);
   const [savedContributors, setSavedContributors] = useState<
     SavedContributor[]
   >([
@@ -47,7 +44,8 @@ export default function Contributors({ dataList }: tableProps) {
   ]);
   const [listSaved, setListSaved] = useState<string[]>([]);
   const [imgFailLoad, setImgFailLoad] = useState(false);
-  
+  const [openModal, setOpenModal] = useState(false);
+
   const navigate = useNavigate();
 
   const handleClose = () => {
