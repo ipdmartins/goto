@@ -16,13 +16,13 @@ export default function PieChartModel({ dataList }: tableProps) {
   interface LabelProps {
     name: string;
     value: number;
-    percent: number;
+    percent?: number;
     cx: number;
     cy: number;
     midAngle: number;
     innerRadius: number;
     outerRadius: number;
-    index: number;
+    index?: number;
   }
 
   const generateColorCode = () => {
@@ -33,13 +33,11 @@ export default function PieChartModel({ dataList }: tableProps) {
   const renderCustomLabel = ({
     name,
     value,
-    percent,
     cx,
     cy,
     midAngle,
     innerRadius,
     outerRadius,
-    index,
   }: LabelProps) => {
     const RADIAN = Math.PI / 180;
     const radius = innerRadius + (outerRadius - innerRadius) * 1.2;

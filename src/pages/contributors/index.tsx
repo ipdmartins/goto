@@ -28,7 +28,7 @@ export default function Contributors() {
         bg="secondary"
         onClick={() => navigate(-1)}
       >
-        Return
+        {"‹‹back"}
       </Badge>
       <h4 className="text-center mt-4 mb-3">Bookmarked Contributors</h4>
       <Table striped bordered hover>

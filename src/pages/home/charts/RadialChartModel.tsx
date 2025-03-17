@@ -12,7 +12,7 @@ interface IChartData {
 
 export default function RadialChartModel({ dataChart }: IChartData) {
   const transformDataForRadialChart = (data: [string, number][]) => {
-    return data.map(([name, value], index) => ({
+    return data.map(([name, value]) => ({
       name,
       uv: value,
       pv: value * 100,

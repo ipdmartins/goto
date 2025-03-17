@@ -9,6 +9,7 @@ import {
 import { AppDispatch, RootState } from "../../redux/store";
 import Contributions from "./tables/Contributions";
 import Contributors from "./tables/Contributors";
+import ThemeToggle from "../../context/ThemeToggle";
 
 export default function Home() {
   const [repoData, setRepoData] = useState<IRepoData>({
@@ -210,6 +211,7 @@ export default function Home() {
 
   return (
     <div>
+      <ThemeToggle />
       <h4 className="text-center mb-4">Open-Source Contribution Analyser</h4>
       <Form onSubmit={handleSubmit} className="mb-4">
         <Row className="g-3 align-items-end">
@@ -217,7 +219,8 @@ export default function Home() {
             <Form.Group controlId="formRepoOwner">
               <Form.Label>Owner</Form.Label>
               <Form.Control
-                style={{ width: "300px" }}
+                data-testid="home-owner-input"
+                style={{ width: "370px" }}
                 type="text"
                 placeholder="Enter a repository owner"
                 value={repoData.owner}
@@ -231,7 +234,8 @@ export default function Home() {
             <Form.Group controlId="formRepoName">
               <Form.Label>Repository</Form.Label>
               <Form.Control
-                style={{ width: "400px" }}
+                data-testid="home-repo-input"
+                style={{ width: "370px" }}
                 type="text"
                 placeholder="Enter the repo name"
                 value={repoData.repo}
@@ -245,7 +249,8 @@ export default function Home() {
             <Form.Group controlId="formLimitPerPage">
               <Form.Label>Results per page</Form.Label>
               <Form.Control
-                style={{ width: "150px" }}
+                data-testid="home-results-input"
+                style={{ width: "255px" }}
                 placeholder="Enter a number between 30 and 200"
                 value={resultsPerSearch}
                 type="number"
@@ -253,12 +258,12 @@ export default function Home() {
               />
             </Form.Group>
           </Col>
-          <Col xs="auto">
-            <Button variant="primary" type="submit">
+          <Col className="ms-3" xs="auto">
+            <Button data-testid="home-search-button" variant="primary" type="submit">
               Search
             </Button>
             {loading && <Spinner animation="border" role="status" />}
-            {error && <p className="text-danger">{error}</p>}
+            {error && <p data-testid="home-error-message" className="text-danger">{error}</p>}
           </Col>
         </Row>
       </Form>
@@ -270,13 +275,14 @@ export default function Home() {
               <Col sm={5}>
                 <Form.Group controlId="nameRepoForm">
                   <Form.Label className="mb-0">Name</Form.Label>
-                  <Form.Control onChange={() => {}} value={repoData.name} />
+                  <Form.Control data-testid="home-repo-name" onChange={() => {}} value={repoData.name} />
                 </Form.Group>
               </Col>
               <Col sm={7}>
                 <Form.Group controlId="descRepoForm">
                   <Form.Label className="mb-0">Description</Form.Label>
                   <Form.Control
+                    data-testid="home-repo-description"
                     onChange={() => {}}
                     value={repoData.description}
                   />
@@ -287,25 +293,26 @@ export default function Home() {
               <Col>
                 <Form.Group controlId="languageRepoForm">
                   <Form.Label className="mb-0">Language</Form.Label>
-                  <Form.Control onChange={() => {}} value={repoData.language} />
+                  <Form.Control data-testid="home-repo-language" onChange={() => {}} value={repoData.language} />
                 </Form.Group>
               </Col>
               <Col>
                 <Form.Group controlId="licenseRepoForm">
                   <Form.Label className="mb-0">License</Form.Label>
-                  <Form.Control onChange={() => {}} value={repoData.license} />
+                  <Form.Control data-testid="home-repo-license" onChange={() => {}} value={repoData.license} />
                 </Form.Group>
               </Col>
               <Col>
                 <Form.Group controlId="starsRepoForm">
                   <Form.Label className="mb-0">Stars</Form.Label>
-                  <Form.Control onChange={() => {}} value={repoData.stars} />
+                  <Form.Control data-testid="home-repo-stars" onChange={() => {}} value={repoData.stars} />
                 </Form.Group>
               </Col>
               <Col>
                 <Form.Group controlId="followersRepoForm">
                   <Form.Label className="mb-0">Followers</Form.Label>
                   <Form.Control
+                    data-testid="home-repo-followers"
                     onChange={() => {}}
                     value={repoData.followers}
                   />
