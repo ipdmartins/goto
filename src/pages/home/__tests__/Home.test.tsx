@@ -6,10 +6,8 @@ import Home from '../index';
 import repoReducer from '../../../redux/repoSlice';
 import '@testing-library/jest-dom';
 
-// Mock the fetch function
 global.fetch = jest.fn();
 
-// Mock localStorage
 const mockLocalStorage = {
   getItem: jest.fn(),
   setItem: jest.fn(),
@@ -17,7 +15,6 @@ const mockLocalStorage = {
 };
 Object.defineProperty(window, 'localStorage', { value: mockLocalStorage });
 
-// Create a mock store
 const createMockStore = () => {
   return configureStore({
     reducer: {
@@ -26,7 +23,6 @@ const createMockStore = () => {
   });
 };
 
-// Custom render function that includes providers
 const renderWithProviders = (ui: React.ReactElement) => {
   const store = createMockStore();
   const router = createMemoryRouter(

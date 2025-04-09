@@ -3,7 +3,7 @@ import { useContext } from "react";
 import { ThemeContext } from "./context/themeContext";
 import Contributors from "./pages/contributors";
 import Home from "./pages/home";
-import "./App.css";
+import "./styles/App.css";
 
 const router = createBrowserRouter(
   [

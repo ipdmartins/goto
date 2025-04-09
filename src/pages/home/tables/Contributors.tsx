@@ -91,7 +91,7 @@ export default function Contributors({ dataList }: tableProps) {
         <h5>Top 30 Contributors</h5>
         <Badge
           className="mb-2 badge-hover"
-          bg="info"
+          bg="primary"
           onClick={() => setOpenModal(true)}
         >
           View Chart
@@ -99,7 +99,7 @@ export default function Contributors({ dataList }: tableProps) {
         <div className="flex-grow-1" />
         <Badge
           className="mb-2 badge-hover"
-          bg="info"
+          bg="primary"
           onClick={() => navigate("/contributors")}
         >
           Verify my bookmarks

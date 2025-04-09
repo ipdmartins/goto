@@ -5,10 +5,10 @@ import { Provider } from "react-redux";
 import { ThemeProvider } from "./context/themeContext";
 import { store, persistor } from "./redux/store";
 import reportWebVitals from "./reportWebVitals";
-import App from "./App";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./styles/theme.css";
-import "./index.css";
+import "./styles/index.css";
+import App from "./App";
 
 const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement

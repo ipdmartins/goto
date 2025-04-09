@@ -20,7 +20,7 @@ export default function Contributions({ title, dataList }: tableProps) {
         <h5>{`Top ${title} Contributions`}</h5>
         <Badge
           className="mb-2 badge-hover"
-          bg="info"
+          bg="primary"
           onClick={() => setOpenModal(true)}
         >
           View Chart
