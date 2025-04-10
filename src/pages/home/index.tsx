@@ -7,9 +7,11 @@ import {
   IContributorsProps,
 } from "../../redux/repoSlice";
 import { AppDispatch, RootState } from "../../redux/store";
+import { addTopContributor, clearTopContributor} from "../../redux/topContributorSlice";
 import Contributions from "./tables/Contributions";
 import Contributors from "./tables/Contributors";
 import ThemeToggle from "../../context/ThemeToggle";
+import { IContributorProps } from "../../redux/topContributorSlice";
 
 export default function Home() {
   const [repoData, setRepoData] = useState<IRepoData>({
@@ -29,23 +31,28 @@ export default function Home() {
   const [resultsPerSearch, setResultsPerSearch] = useState(30);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   const dispatch = useDispatch<AppDispatch>();
-  const repositories = useSelector(
-    (state: RootState) => state.repositories.repositories
-  );
+  const repositories = useSelector((state: RootState) => state.repositories);
+
+  const searchRepo = async (key:string) => {
+    const repoExists = repositories.repositories.find(
+      (repo) => `${repo.owner}/${repo.repo}` === key
+    );
+    return repoExists;
+  }
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
 
-    const searchRepo = `${repoData.owner}/${repoData.repo}`;
-    localStorage.setItem("currentRepo", JSON.stringify(searchRepo));
+    const searchParams = `${repoData.owner}/${repoData.repo}`;
+    localStorage.setItem("currentRepo", JSON.stringify(searchParams));
     const timestamp = Date.now();
     localStorage.setItem("timestamp", String(timestamp));
 
-    const repoExists = repositories[searchRepo];
+    const repoExists = await searchRepo(searchParams);
     const oneHour = 60 * 60 * 1000;
     if (repoExists && Date.now() - repoExists.lastUpdated < oneHour) {
       setRepoData(repoExists);
@@ -59,6 +66,7 @@ export default function Home() {
     //Abort after 30 secs
     const timeoutId = setTimeout(() => controller.abort(), 30000);
 
+    dispatch(clearTopContributor());
     try {
       const repoResp = await fetch(
         `https://api.github.com/repos/${repoData.owner}/${repoData.repo}`,
@@ -75,6 +83,7 @@ export default function Home() {
         throw new Error("Failed to fetch repo data");
       }
       const repoRespData = await repoResp.json();
+      console.log(repoData);
 
       const contributorsResp = await fetch(
         `https://api.github.com/repos/${repoData.owner}/${repoData.repo}/contributors?per_page=${resultsPerSearch}`,
@@ -91,9 +100,10 @@ export default function Home() {
         throw new Error("Failed to fetch contributors data");
       }
       const contributorsRespData = await contributorsResp.json();
+      console.log(contributorsRespData);
 
       const compiledData: IContributorsProps[] = [];
-
+      let topContributor: IContributorProps | null = null;
       await Promise.all(
         contributorsRespData.map(async (contributor: any) => {
           const contributorResp = await fetch(contributor.url, {
@@ -117,6 +127,26 @@ export default function Home() {
           if (contributorRespData.location) {
             locationContributions[contributorRespData.location] =
               (locationContributions[contributorRespData.location] || 0) + 1;
+          }
+
+          if (!topContributor) {
+            topContributor = {
+              avatar: contributorRespData.avatar_url,
+              fullName: contributorRespData.name,
+              company: contributorRespData.company,
+              location: contributorRespData.location,
+              contributions: contributor.contributions,
+              userName: contributorRespData.login,
+            };
+          } else if (topContributor.contributions < contributor.contributions) {
+            topContributor = {
+              avatar: contributorRespData.avatar_url,
+              fullName: contributorRespData.name,
+              company: contributorRespData.company,
+              location: contributorRespData.location,
+              contributions: contributor.contributions,
+              userName: contributorRespData.login,
+            };
           }
 
           compiledData.push({
@@ -167,6 +197,9 @@ export default function Home() {
           lastUpdated: Date.now(),
         })
       );
+      if(topContributor){
+        dispatch(addTopContributor(topContributor));
+      }
     } catch (error: unknown) {
       if (error instanceof Error) {
         if (error.name === "AbortError") {
@@ -182,20 +215,23 @@ export default function Home() {
   };
 
   useEffect(() => {
-    const timestamp = localStorage.getItem("timestamp");
-    if (timestamp && Date.now() - Number(timestamp) > 60 * 60 * 1000) {
-      localStorage.removeItem("timestamp");
-    } else {
-      const stored = localStorage.getItem("currentRepo");
-
-      if (stored) {
-        const format = JSON.parse(stored);
-        const repoExists = repositories[format];
-        if (repoExists) {
-          setRepoData(repoExists);
+    async function searchData(){
+      const timestamp = localStorage.getItem("timestamp");
+      if (timestamp && Date.now() - Number(timestamp) > 60 * 60 * 1000) {
+        localStorage.removeItem("timestamp");
+      } else {
+        const stored = localStorage.getItem("currentRepo");
+  
+        if (stored) {
+          const format = JSON.parse(stored) as string;
+          const repoExists = await searchRepo(format);
+          if (repoExists) {
+            setRepoData(repoExists);
+          }
         }
       }
     }
+    searchData();
   }, []);
 
   const handleChangeLimitSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -259,11 +295,19 @@ export default function Home() {
             </Form.Group>
           </Col>
           <Col className="ms-3" xs="auto">
-            <Button data-testid="home-search-button" variant="primary" type="submit">
+            <Button
+              data-testid="home-search-button"
+              variant="primary"
+              type="submit"
+            >
               Search
             </Button>
             {loading && <Spinner animation="border" role="status" />}
-            {error && <p data-testid="home-error-message" className="text-danger">{error}</p>}
+            {error && (
+              <p data-testid="home-error-message" className="text-danger">
+                {error}
+              </p>
+            )}
           </Col>
         </Row>
       </Form>
@@ -275,7 +319,11 @@ export default function Home() {
               <Col sm={5}>
                 <Form.Group controlId="nameRepoForm">
                   <Form.Label className="mb-0">Name</Form.Label>
-                  <Form.Control data-testid="home-repo-name" onChange={() => {}} value={repoData.name} />
+                  <Form.Control
+                    data-testid="home-repo-name"
+                    onChange={() => {}}
+                    value={repoData.name}
+                  />
                 </Form.Group>
               </Col>
               <Col sm={7}>
@@ -293,19 +341,31 @@ export default function Home() {
               <Col>
                 <Form.Group controlId="languageRepoForm">
                   <Form.Label className="mb-0">Language</Form.Label>
-                  <Form.Control data-testid="home-repo-language" onChange={() => {}} value={repoData.language} />
+                  <Form.Control
+                    data-testid="home-repo-language"
+                    onChange={() => {}}
+                    value={repoData.language}
+                  />
                 </Form.Group>
               </Col>
               <Col>
                 <Form.Group controlId="licenseRepoForm">
                   <Form.Label className="mb-0">License</Form.Label>
-                  <Form.Control data-testid="home-repo-license" onChange={() => {}} value={repoData.license} />
+                  <Form.Control
+                    data-testid="home-repo-license"
+                    onChange={() => {}}
+                    value={repoData.license}
+                  />
                 </Form.Group>
               </Col>
               <Col>
                 <Form.Group controlId="starsRepoForm">
                   <Form.Label className="mb-0">Stars</Form.Label>
-                  <Form.Control data-testid="home-repo-stars" onChange={() => {}} value={repoData.stars} />
+                  <Form.Control
+                    data-testid="home-repo-stars"
+                    onChange={() => {}}
+                    value={repoData.stars}
+                  />
                 </Form.Group>
               </Col>
               <Col>
