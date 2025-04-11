@@ -24,10 +24,9 @@ const persistConfig = {
   key: "root",
   version: 1,
   storage,
-  whitelist: ["repositories"], // Only persist 'repositories' slice
+  whitelist: ["repositories"], 
 };
 
-// const persistedReducer = persistReducer(persistConfig, repositoryReducer);
 const persistedReducer = persistReducer(persistConfig, rootReducer);
 
 export const store = configureStore({

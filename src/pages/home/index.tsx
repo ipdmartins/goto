@@ -33,7 +33,11 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
 
   const dispatch = useDispatch<AppDispatch>();
-  const repositories = useSelector((state: RootState) => state.repositories);
+  const repositories = useSelector((state: RootState) => state.repositories, (prev, current) => {
+    return prev.repositories.length === current.repositories.length && prev.repositories.every((repo, index) => {
+      return repo.lastUpdated === current.repositories[index].lastUpdated;
+    })
+  });
 
   const searchRepo = async (key:string) => {
     const repoExists = repositories.repositories.find(

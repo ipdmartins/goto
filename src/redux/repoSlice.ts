@@ -25,17 +25,12 @@ export interface IRepoData {
   lastUpdated: number;
 }
 
-// export interface RepoState {
-//   repositories: Record<string, IRepoData>;
-// }
-
 export interface RepoState {
   repositories: IRepoData[];
 }
 
 const initialState: RepoState = {
   repositories: [],
-  // repositories: {},
 };
 
 const repositorySlice = createSlice({
@@ -44,15 +39,14 @@ const repositorySlice = createSlice({
   reducers: {
     addRepository: (state, action: PayloadAction<IRepoData>) => {
       const repoData = action.payload;
-      // state.repositories[`${repoData.owner}/${repoData.repo}`] = repoData;
       const key = `${repoData.owner}/${repoData.repo}`;
       const existingIndex = state.repositories.findIndex(
         (repo) => `${repo.owner}/${repo.repo}` === key
       );
       if (existingIndex >= 0) {
-        state.repositories[existingIndex] = repoData; // Update if exists
+        state.repositories[existingIndex] = repoData;
       } else {
-        state.repositories.push(repoData); // Add new
+        state.repositories.push(repoData); 
       }
     },
     clearRepositories: (state) => {
@@ -60,11 +54,6 @@ const repositorySlice = createSlice({
       state.repositories = state.repositories.filter(
         (repo) => Date.now() - repo.lastUpdated <= oneHour
       );
-      // Object.keys(state.repositories).forEach((key) => {
-      //   if (Date.now() - state.repositories[key].lastUpdated > oneHour) {
-      //     delete state.repositories[key];
-      //   }
-      // });
     },
   },
 });

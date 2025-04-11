@@ -1,4 +1,4 @@
-import repositoryReducer, { addRepository, clearRepositories, RepoState } from "../repoSlice";
+import repositoryReducer, { addRepository, clearRepositories, RepoState } from "../../repoSlice";
 
 describe("repoSlice", () => {
   const initialState: RepoState = {
@@ -22,7 +22,7 @@ describe("repoSlice", () => {
       lastUpdated: Date.now(),
     };
     const newState = repositoryReducer(initialState, addRepository(repo));
-    // expect(newState.repositories["facebook/react-native"]).toBe(repo);
+    expect(newState.repositories[0]).toBe(repo);
   });
 
   it("addRepository updates an existing repository with the same key", () => {
@@ -54,7 +54,7 @@ describe("repoSlice", () => {
       addRepository(updatedRepo)
     );
     expect(Object.keys(newState.repositories)).toHaveLength(1);
-    // expect(newState.repositories["facebook/react-native"].stars).toBe(20000);
+    expect(newState.repositories[0].stars).toBe(20000);
   })
 
   it("clearRepositories removes old entries", () => {
@@ -92,6 +92,6 @@ describe("repoSlice", () => {
     const state = repositoryReducer(initialState, addRepository(oldRepo));
     const newState = repositoryReducer(state, addRepository(newRepo));
     const removedState = repositoryReducer(newState, clearRepositories());
-    expect(removedState.repositories).toEqual({"facebook/react-native": newRepo}); 
+    expect(removedState.repositories[0]).toEqual(newRepo); 
   })
 });
